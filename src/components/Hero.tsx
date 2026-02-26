@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { Zap } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
-
 export default function Hero({ onOpenPricing }: { onOpenPricing: () => void }) {
   const { t } = useLanguage();
 
