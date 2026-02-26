@@ -1,0 +1,184 @@
+{
+  "version": "2.0.0",
+
+  "project": "Everest AI",
+  "architect": "Lead Architect (MIT Sloan/SDE III)",
+  "design_principles": ["SOLID", "Clean Architecture", "Domain-Driven Design", "Contract-First"],
+  "endpoints": {
+    "auth": {
+      "login": {
+        "method": "POST",
+        "url": "/api/v1/auth/login",
+        "body": {
+          "email": { "type": "string", "format": "email", "required": true },
+          "password": { "type": "string", "minLength": 8, "required": true }
+        },
+        "response": {
+          "200": { "token": "string", "user": "UserSchema" },
+          "401": { "error": "Invalid credentials" }
+        }
+      },
+      "register": {
+        "method": "POST",
+        "url": "/api/v1/auth/register",
+        "body": {
+          "name": { "type": "string", "required": true },
+          "email": { "type": "string", "format": "email", "required": true },
+          "password": { "type": "string", "minLength": 8, "required": true }
+        },
+        "response": {
+          "201": { "token": "string", "user": "UserSchema" },
+          "400": { "error": "Validation failed" }
+        }
+      }
+    },
+    "features": {
+      "list": {
+        "method": "GET",
+        "url": "/api/v1/features",
+        "response": {
+          "200": { "features": "FeatureSchema[]" }
+        }
+      },
+      "get": {
+        "method": "GET",
+        "url": "/api/v1/features/:id",
+        "response": {
+          "200": "FeatureSchema",
+          "404": { "error": "Feature not found" }
+        }
+      }
+    },
+    "pricing": {
+      "list": {
+        "method": "GET",
+        "url": "/api/v1/pricing",
+        "response": {
+          "200": { "plans": "PricingPlanSchema[]" }
+        }
+      }
+    },
+    "projects": {
+      "list": {
+        "method": "GET",
+        "url": "/api/v1/projects",
+        "response": {
+          "200": { "projects": "ProjectSchema[]" }
+        }
+      },
+      "create": {
+        "method": "POST",
+        "url": "/api/v1/projects",
+        "body": {
+          "name": { "type": "string", "required": true },
+          "description": { "type": "string" }
+        },
+        "response": {
+          "201": "ProjectSchema"
+        }
+      },
+      "delete": {
+        "method": "DELETE",
+        "url": "/api/v1/projects/:id",
+        "response": {
+          "204": "empty"
+        }
+      }
+    },
+    "editor": {
+      "save": {
+        "method": "POST",
+        "url": "/api/v1/editor/save/:projectId",
+        "body": "EditorStateSchema",
+        "response": {
+          "200": { "status": "success" }
+        }
+      },
+      "generate": {
+        "method": "POST",
+        "url": "/api/v1/editor/generate",
+        "body": {
+          "prompt": { "type": "string", "required": true },
+          "context": { "type": "object" }
+        },
+        "response": {
+          "200": { "generated_content": "string" }
+        }
+      }
+    }
+
+  },
+  "schemas": {
+    "UserSchema": {
+      "id": "string",
+      "name": "string",
+      "email": "string",
+      "role": "enum[user, admin]",
+      "created_at": "date"
+    },
+    "FeatureSchema": {
+      "id": "string",
+      "title": "string",
+      "description": "string",
+      "icon": "string",
+      "category": "string"
+    },
+    "PricingPlanSchema": {
+      "id": "string",
+      "name": "string",
+      "price": "number",
+      "currency": "string",
+      "interval": "enum[monthly, yearly]",
+      "features": "string[]",
+      "is_popular": "boolean"
+    },
+    "ProjectSchema": {
+      "id": "string",
+      "name": "string",
+      "description": "string",
+      "thumbnail": "string",
+      "last_updated": "date",
+      "owner_id": "string"
+    },
+    "EditorStateSchema": {
+      "project_id": "string",
+      "content": "object",
+      "settings": "object",
+      "version": "number"
+    }
+
+  },
+  "database": {
+    "engine": "PostgreSQL",
+    "tables": {
+      "users": {
+        "id": "uuid, primary_key",
+        "name": "varchar(255)",
+        "email": "unique, varchar(255)",
+        "password_hash": "text",
+        "role": "varchar(20)",
+        "created_at": "timestamp"
+      },
+      "features": {
+        "id": "uuid, primary_key",
+        "title": "varchar(255)",
+        "description": "text",
+        "icon": "varchar(50)",
+        "created_at": "timestamp"
+      },
+      "projects": {
+        "id": "uuid, primary_key",
+        "name": "varchar(255)",
+        "description": "text",
+        "owner_id": "uuid, foreign_key(users.id)",
+        "last_updated": "timestamp"
+      },
+      "editor_states": {
+        "project_id": "uuid, primary_key, foreign_key(projects.id)",
+        "content_json": "jsonb",
+        "settings_json": "jsonb"
+      }
+
+    }
+  }
+}

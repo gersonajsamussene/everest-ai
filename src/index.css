@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-background: #030712; /* Deep Slate/Black */
+  --color-surface: #111827;    /* Slate-900 */
+  --color-surface-lighter: #1f2937;
+  --color-primary: #8b5cf6;    /* Violet-500 */
+  --color-primary-glow: #a78bfa;
+  --color-secondary: #06b6d4;  /* Cyan-500 */
+  --color-accent: #f472b6;     /* Pink-400 */
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-text-muted: #9ca3af;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--color-background);
+  }
+  body {
+    @apply bg-background text-white font-sans antialiased;
+    background-image: 
+      radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight text-white;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-surface/40 backdrop-blur-xl border border-white/10 rounded-[24px] overflow-hidden;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+  
+  .glass-header {
+    @apply sticky top-0 z-50 bg-background/60 backdrop-blur-md border-b border-white/5;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white px-8 py-4 rounded-full font-semibold 
+           hover:bg-primary-glow hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] 
+           transition-all duration-300 transform hover:-translate-y-1
+           inline-flex items-center justify-center cursor-pointer;
+  }
+  
+  .btn-secondary {
+    @apply bg-white/5 text-white border border-white/10 px-8 py-4 rounded-full font-semibold 
+           hover:bg-white/10 transition-all duration-300
+           inline-flex items-center justify-center cursor-pointer;
+  }
+
+  .text-gradient-premium {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-accent;
+  }
+
+  .glow-mesh {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: -1;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-primary/20 rounded-full hover:bg-primary/40 transition-colors;
+  }
+}
+
