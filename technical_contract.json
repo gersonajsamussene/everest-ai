@@ -1,60 +1,139 @@
 {
-  "version": "2.0.0",
-
+  "version": "4.0.0",
   "project": "Everest AI",
   "architect": "Lead Architect (MIT Sloan/SDE III)",
-  "design_principles": ["SOLID", "Clean Architecture", "Domain-Driven Design", "Contract-First"],
+  "design_principles": [
+    "SOLID",
+    "Clean Architecture",
+    "Domain-Driven Design",
+    "Contract-First",
+    "RBAC-Driven",
+    "AI-First"
+  ],
   "endpoints": {
     "auth": {
       "login": {
         "method": "POST",
         "url": "/api/v1/auth/login",
         "body": {
-          "email": { "type": "string", "format": "email", "required": true },
-          "password": { "type": "string", "minLength": 8, "required": true }
+          "email": {
+            "type": "string",
+            "format": "email",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "required": true
+          }
         },
         "response": {
-          "200": { "token": "string", "user": "UserSchema" },
-          "401": { "error": "Invalid credentials" }
+          "200": {
+            "token": "string",
+            "user": "UserSchema"
+          },
+          "401": {
+            "error": "Invalid credentials"
+          }
         }
       },
       "register": {
         "method": "POST",
         "url": "/api/v1/auth/register",
         "body": {
-          "name": { "type": "string", "required": true },
-          "email": { "type": "string", "format": "email", "required": true },
-          "password": { "type": "string", "minLength": 8, "required": true }
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "required": true
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "required": true
+          },
+          "plan": {
+            "type": "enum[STARTER, EXPERT, AGENCY_PRO]",
+            "default": "STARTER"
+          }
         },
         "response": {
-          "201": { "token": "string", "user": "UserSchema" },
-          "400": { "error": "Validation failed" }
+          "201": {
+            "token": "string",
+            "user": "UserSchema"
+          },
+          "400": {
+            "error": "Validation failed"
+          }
         }
       }
     },
-    "features": {
-      "list": {
+    "subscriptions": {
+      "me": {
         "method": "GET",
-        "url": "/api/v1/features",
+        "url": "/api/v1/subscriptions/me",
         "response": {
-          "200": { "features": "FeatureSchema[]" }
+          "200": "SubscriptionStateSchema"
         }
       },
-      "get": {
-        "method": "GET",
-        "url": "/api/v1/features/:id",
+      "upgrade": {
+        "method": "POST",
+        "url": "/api/v1/subscriptions/upgrade",
+        "body": {
+          "tier": {
+            "type": "enum[EXPERT, AGENCY_PRO]",
+            "required": true
+          },
+          "payment_token": {
+            "type": "string",
+            "required": true
+          }
+        },
         "response": {
-          "200": "FeatureSchema",
-          "404": { "error": "Feature not found" }
+          "200": "SubscriptionStateSchema",
+          "402": {
+            "error": "Payment Required"
+          }
         }
       }
     },
-    "pricing": {
-      "list": {
+    "ai_agents": {
+      "list_specialists": {
         "method": "GET",
-        "url": "/api/v1/pricing",
+        "url": "/api/v1/ai/agents",
         "response": {
-          "200": { "plans": "PricingPlanSchema[]" }
+          "200": {
+            "agents": "AgentSchema[]"
+          }
+        }
+      },
+      "invoke": {
+        "method": "POST",
+        "url": "/api/v1/ai/agents/:agent_id/invoke",
+        "headers": {
+          "Authorization": "Bearer <token>"
+        },
+        "body": {
+          "prompt": {
+            "type": "string",
+            "required": true
+          },
+          "context_data": {
+            "type": "object",
+            "required": false
+          }
+        },
+        "response": {
+          "200": {
+            "reply": "string",
+            "tokens_consumed": "number"
+          },
+          "403": {
+            "error": "Plan limit reached. Upgrade to continue."
+          }
         }
       }
     },
@@ -63,18 +142,28 @@
         "method": "GET",
         "url": "/api/v1/projects",
         "response": {
-          "200": { "projects": "ProjectSchema[]" }
+          "200": {
+            "projects": "ProjectSchema[]"
+          }
         }
       },
       "create": {
         "method": "POST",
         "url": "/api/v1/projects",
         "body": {
-          "name": { "type": "string", "required": true },
-          "description": { "type": "string" }
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "description": {
+            "type": "string"
+          }
         },
         "response": {
-          "201": "ProjectSchema"
+          "201": "ProjectSchema",
+          "403": {
+            "error": "Project limit reached for current tier."
+          }
         }
       },
       "delete": {
@@ -84,69 +173,42 @@
           "204": "empty"
         }
       }
-    },
-    "editor": {
-      "save": {
-        "method": "POST",
-        "url": "/api/v1/editor/save/:projectId",
-        "body": "EditorStateSchema",
-        "response": {
-          "200": { "status": "success" }
-        }
-      },
-      "generate": {
-        "method": "POST",
-        "url": "/api/v1/editor/generate",
-        "body": {
-          "prompt": { "type": "string", "required": true },
-          "context": { "type": "object" }
-        },
-        "response": {
-          "200": { "generated_content": "string" }
-        }
-      }
     }
-
   },
   "schemas": {
     "UserSchema": {
       "id": "string",
       "name": "string",
       "email": "string",
-      "role": "enum[user, admin]",
+      "role": "enum[USER, ADMIN]",
+      "tier": "enum[STARTER, EXPERT, AGENCY_PRO]",
       "created_at": "date"
     },
-    "FeatureSchema": {
-      "id": "string",
-      "title": "string",
-      "description": "string",
-      "icon": "string",
-      "category": "string"
+    "SubscriptionStateSchema": {
+      "current_tier": "enum[STARTER, EXPERT, AGENCY_PRO]",
+      "tokens_used_this_month": "number",
+      "tokens_limit": "number",
+      "projects_used": "number",
+      "projects_limit": "number",
+      "status": "enum[ACTIVE, PAST_DUE, CANCELLED]"
     },
-    "PricingPlanSchema": {
+    "AgentSchema": {
       "id": "string",
       "name": "string",
-      "price": "number",
-      "currency": "string",
-      "interval": "enum[monthly, yearly]",
-      "features": "string[]",
-      "is_popular": "boolean"
+      "specialty": "string",
+      "required_tier": "enum[STARTER, EXPERT, AGENCY_PRO]",
+      "description": "string",
+      "avatar_icon": "string"
     },
     "ProjectSchema": {
       "id": "string",
       "name": "string",
       "description": "string",
       "thumbnail": "string",
+      "ai_generated_metadata": "object",
       "last_updated": "date",
       "owner_id": "string"
-    },
-    "EditorStateSchema": {
-      "project_id": "string",
-      "content": "object",
-      "settings": "object",
-      "version": "number"
     }
-
   },
   "database": {
     "engine": "PostgreSQL",
@@ -157,28 +219,32 @@
         "email": "unique, varchar(255)",
         "password_hash": "text",
         "role": "varchar(20)",
+        "tier": "varchar(20), default('STARTER')",
         "created_at": "timestamp"
       },
-      "features": {
-        "id": "uuid, primary_key",
-        "title": "varchar(255)",
-        "description": "text",
-        "icon": "varchar(50)",
-        "created_at": "timestamp"
+      "user_metrics": {
+        "user_id": "uuid, primary_key, foreign_key(users.id)",
+        "tokens_spent": "int, default(0)",
+        "projects_created": "int, default(0)",
+        "last_reset": "timestamp"
       },
       "projects": {
         "id": "uuid, primary_key",
         "name": "varchar(255)",
         "description": "text",
         "owner_id": "uuid, foreign_key(users.id)",
+        "metrics_json": "jsonb",
         "last_updated": "timestamp"
       },
-      "editor_states": {
-        "project_id": "uuid, primary_key, foreign_key(projects.id)",
-        "content_json": "jsonb",
-        "settings_json": "jsonb"
+      "gemini_history": {
+        "id": "uuid, primary_key",
+        "user_id": "uuid, foreign_key(users.id)",
+        "agent_id": "varchar(50)",
+        "prompt": "text",
+        "response": "text",
+        "tokens": "int",
+        "created_at": "timestamp"
       }
-
     }
   }
 }

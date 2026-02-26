@@ -87,6 +87,24 @@ export const api = {
       });
       return handleResponse(res);
     }
+  },
+  ai: {
+    agents: {
+      list: async (): Promise<{ agents: any[] }> => {
+        const res = await fetch(`${BASE_URL}/ai/agents`, {
+          headers: getHeaders()
+        });
+        return handleResponse(res);
+      },
+      invoke: async (agentId: string, prompt: string, context_data?: any): Promise<{ reply: string, tokens_consumed: number }> => {
+        const res = await fetch(`${BASE_URL}/ai/agents/${agentId}/invoke`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({ prompt, context_data })
+        });
+        return handleResponse(res);
+      }
+    }
   }
 };
 

@@ -18,6 +18,16 @@ export interface UserSchema {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: 'USER' | 'ADMIN';
+  tier?: 'STARTER' | 'EXPERT' | 'AGENCY_PRO';
   created_at: string;
+}
+
+export interface AgentSchema {
+  id: string;
+  name: string;
+  specialty: string;
+  required_tier: 'STARTER' | 'EXPERT' | 'AGENCY_PRO';
+  description: string;
+  avatar_icon: string;
 }
