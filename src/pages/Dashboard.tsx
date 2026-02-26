@@ -2,21 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
   Plus, 
-  Search, 
-  Settings, 
-  LogOut, 
+  Search,
   Box, 
   Clock, 
   ChevronRight,
-  Zap,
   Loader2,
   X
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { api } from '../services/api';
 import { ProjectSchema } from '../types/api';
+import Sidebar from '../components/shared/Sidebar';
 
 export default function Dashboard() {
   const { t } = useLanguage();
@@ -63,42 +60,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-72 border-r border-white/5 bg-background/50 backdrop-blur-xl flex flex-col hidden md:flex">
-        <div className="p-8">
-          <div className="flex items-center gap-3 mb-10 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
-              <Zap className="w-6 h-6 text-primary" fill="currentColor" fillOpacity={0.2} />
-            </div>
-            <span className="font-display font-black text-2xl tracking-tight text-white uppercase italic">EVEREST</span>
-          </div>
-
-          <nav className="space-y-2">
-            <button className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 font-bold transition-all">
-              <LayoutDashboard className="w-5 h-5" />
-              <span>Dashboard</span>
-            </button>
-            <button className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-text-muted hover:text-white hover:bg-white/5 border border-transparent font-bold transition-all">
-              <Box className="w-5 h-5" />
-              <span>Projects</span>
-            </button>
-            <button className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-text-muted hover:text-white hover:bg-white/5 border border-transparent font-bold transition-all">
-              <Settings className="w-5 h-5" />
-              <span>Settings</span>
-            </button>
-          </nav>
-        </div>
-
-        <div className="mt-auto p-8 border-t border-white/5">
-          <button 
-            onClick={() => { api.auth.logout(); navigate('/'); }} 
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-text-muted hover:text-red-400 hover:bg-red-400/5 transition-all font-bold"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
+      <Sidebar currentPath="/dashboard" />
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-[radial-gradient(circle_at_50%_0%,_rgba(139,92,246,0.05)_0%,_transparent_50%)]">
