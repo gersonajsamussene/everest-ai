@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { pool } from '../../utils/db';
+import { supabase } from '../../utils/db';
 import { getUserFromRequest } from '../../utils/auth';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -18,15 +18,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Delete project only if the owner matches
-    const result = await pool.query(
-      'DELETE FROM projects WHERE id = $1 AND owner_id = $2 RETURNING id',
-      [id, user.id]
-    );
+    const { data: project, error: checkError } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('id', id)
+      .eq('owner_id', user.id)
+      .single();
 
-    if (result.rowCount === 0) {
+    if (checkError || !project) {
       return res.status(404).json({ error: 'Project not found or unauthorized' });
     }
+
+    const { error: deleteError } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) throw deleteError;
 
     return res.status(204).end();
   } catch (error) {

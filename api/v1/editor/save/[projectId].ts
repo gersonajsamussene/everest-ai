@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { pool } from '../../../utils/db';
+import { supabase } from '../../../utils/db';
 import { getUserFromRequest } from '../../../utils/auth';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -20,26 +20,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { content, settings, version } = req.body;
 
   try {
-    // Check if user owns the project
-    const projectCheck = await pool.query('SELECT owner_id FROM projects WHERE id = $1', [projectId]);
-    if (projectCheck.rowCount === 0 || projectCheck.rows[0].owner_id !== user.id) {
+    const { data: projectCheck, error: checkError } = await supabase
+      .from('projects')
+      .select('owner_id')
+      .eq('id', projectId)
+      .single();
+
+    if (checkError || !projectCheck || projectCheck.owner_id !== user.id) {
       return res.status(404).json({ error: 'Project not found or unauthorized' });
     }
 
-    // Upsert editor state
-    await pool.query(
-      `INSERT INTO editor_states (project_id, content_json, settings_json, version, updated_at)
-       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
-       ON CONFLICT (project_id) DO UPDATE SET
-       content_json = EXCLUDED.content_json,
-       settings_json = EXCLUDED.settings_json,
-       version = EXCLUDED.version,
-       updated_at = CURRENT_TIMESTAMP`,
-      [projectId, JSON.stringify(content || {}), JSON.stringify(settings || {}), version || 1]
-    );
+    const { error: upsertError } = await supabase
+      .from('editor_states')
+      .upsert({
+        project_id: projectId,
+        content_json: content || {},
+        settings_json: settings || {},
+        version: version || 1,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'project_id' });
 
-    // Update project last_updated timestamp
-    await pool.query('UPDATE projects SET last_updated = CURRENT_TIMESTAMP WHERE id = $1', [projectId]);
+    if (upsertError) throw upsertError;
+
+    const { error: updateError } = await supabase
+      .from('projects')
+      .update({ last_updated: new Date().toISOString() })
+      .eq('id', projectId);
+
+    if (updateError) throw updateError;
 
     return res.status(200).json({ status: 'success' });
   } catch (error) {

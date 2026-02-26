@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { pool } from '../../utils/db';
+import { supabase } from '../../utils/db';
 import { comparePassword, generateToken } from '../../utils/auth';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -14,14 +14,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const result = await pool.query(
-      'SELECT id, name, email, role, password_hash, created_at FROM users WHERE email = $1',
-      [email]
-    );
+    const { data: userRecord, error } = await supabase
+      .from('users')
+      .select('id, name, email, role, password_hash, created_at')
+      .eq('email', email)
+      .single();
 
-    const userRecord = result.rows[0];
-
-    if (!userRecord || !(await comparePassword(password, userRecord.password_hash))) {
+    if (error || !userRecord || !(await comparePassword(password, userRecord.password_hash))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
